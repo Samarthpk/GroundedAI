@@ -1,0 +1,19 @@
+Artificial Intelligence Governance Policy
+
+Purpose
+This policy establishes standards for the responsible use of artificial intelligence systems within an organization. AI systems should be designed and operated with appropriate human oversight, transparency, security, and accountability.
+
+Data Privacy
+Confidential and personally identifiable information must not be submitted to external AI services unless explicitly authorized. Local AI systems are preferred when sensitive business information is processed because data can remain within organizational infrastructure.
+
+Model Validation
+AI-generated outputs must be validated before they are used for material business decisions. Systems should provide supporting sources when possible. Unsupported responses should be flagged rather than presented as verified information.
+
+Human Oversight
+High-impact decisions require human review. AI systems may assist analysts by retrieving, summarizing, and organizing information, but final accountability remains with authorized personnel.
+
+Security
+AI applications must follow existing access-control and information-security policies. Model inputs, retrieved documents, and generated outputs should be protected according to their data classification.
+
+Monitoring
+Organizations should periodically evaluate retrieval quality, model accuracy, unsupported claims, and system failures. Testing should include questions that cannot be answered from the available knowledge base.

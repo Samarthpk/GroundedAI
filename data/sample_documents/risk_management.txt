@@ -1,0 +1,16 @@
+Enterprise Risk Management Framework
+
+Operational Risk
+Operational risk can arise from failed processes, systems, people, or external events. Organizations should identify critical workflows and establish controls for high-impact processes.
+
+Technology Risk
+Technology systems should be monitored for availability, security, data quality, and reliability. Changes to production systems should be tested and documented before deployment.
+
+Data Quality
+Reliable analytics depend on complete, accurate, and consistent data. Data validation should include checks for missing records, duplicate records, invalid values, and inconsistent formats.
+
+Risk Monitoring
+Key risk indicators should be reviewed regularly. Material exceptions should be investigated, documented, and escalated when necessary.
+
+Business Continuity
+Critical systems should have recovery procedures and documented dependencies. Organizations should test recovery plans periodically to reduce disruption during unexpected failures.
