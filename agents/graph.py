@@ -1,8 +1,14 @@
 import re
 from typing import TypedDict, List, Dict, Any
 from langgraph.graph import StateGraph, END
+from langchain_ollama import ChatOllama
 
 from ingestion.vector_store import retrieve
+
+llm = ChatOllama(
+    model="llama3.2:3b",
+    temperature=0
+)
 
 
 class AgentState(TypedDict):
@@ -31,31 +37,58 @@ def analyst_node(state: AgentState):
             "draft_answer": "Not found in the provided documents."
         }
 
-    best = chunks[0]
+    context = "\n\n".join(
+        f"[{chunk['id']}]\n{chunk['text']}"
+        for chunk in chunks
+    )
 
-    # First attempt intentionally uses a bad citation
-    # so we can verify the retry loop works.
-    if state["retry_count"] == 0:
-        answer = (
-            "Sensitive information should use local AI systems because "
-            "data can remain within organizational infrastructure "
-            "[fake-chunk-999]."
-        )
-    else:
-        answer = (
-            "Sensitive information should use local AI systems because "
-            f"data can remain within organizational infrastructure "
-            f"[{best['id']}]."
-        )
+    retry_instruction = ""
+
+    if state["retry_count"] > 0:
+        retry_instruction = """
+Your previous answer failed citation validation.
+Rewrite the answer and make sure every factual statement
+contains a valid citation from the provided chunk IDs.
+"""
+
+    prompt = f"""
+You are a grounded enterprise research assistant.
+
+Answer ONLY from the context below.
+
+Rules:
+1. Every factual claim must end with a citation using the exact chunk ID.
+2. Example citation: [ai_policy.txt-0]
+3. Never invent citation IDs.
+4. If the answer is not supported by the context, say:
+   "Not found in the provided documents."
+5. Do not use outside knowledge.
+
+{retry_instruction}
+
+QUESTION:
+{state['question']}
+
+CONTEXT:
+{context}
+"""
+
+    response = llm.invoke(prompt)
 
     return {
         **state,
-        "draft_answer": answer
+        "draft_answer": response.content.strip()
     }
 
 
 def validator_node(state: AgentState):
     answer = state["draft_answer"]
+
+    if answer == "Not found in the provided documents.":
+        return {
+            **state,
+            "validation_result": True
+        }
 
     valid_ids = {
         chunk["id"]
@@ -94,6 +127,13 @@ def increment_retry_node(state: AgentState):
     }
 
 
+def failed_node(state: AgentState):
+    return {
+        **state,
+        "draft_answer": "Could not produce a grounded answer with valid citations."
+    }
+
+
 def build_graph():
     graph = StateGraph(AgentState)
 
@@ -101,6 +141,7 @@ def build_graph():
     graph.add_node("analyst", analyst_node)
     graph.add_node("validator", validator_node)
     graph.add_node("increment_retry", increment_retry_node)
+    graph.add_node("failed", failed_node)
 
     graph.set_entry_point("retriever")
 
@@ -113,34 +154,11 @@ def build_graph():
         {
             "complete": END,
             "retry": "increment_retry",
-            "failed": END
+            "failed": "failed"
         }
     )
 
     graph.add_edge("increment_retry", "analyst")
+    graph.add_edge("failed", END)
 
     return graph.compile()
-
-
-if __name__ == "__main__":
-    app = build_graph()
-
-    result = app.invoke({
-        "question": "Why should sensitive information use local AI systems?",
-        "retrieved_chunks": [],
-        "draft_answer": "",
-        "validation_result": False,
-        "retry_count": 0
-    })
-
-    print("\nQUESTION:")
-    print(result["question"])
-
-    print("\nFINAL ANSWER:")
-    print(result["draft_answer"])
-
-    print("\nVALIDATION:")
-    print(result["validation_result"])
-
-    print("\nRETRY COUNT:")
-    print(result["retry_count"])
