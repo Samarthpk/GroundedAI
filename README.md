@@ -171,3 +171,41 @@ Potential extensions include PDF ingestion, hybrid retrieval, reranking, retriev
 ## Author
 
 **Samarth Kulkarni**
+
+from pathlib import Path
+from typing import Any
+
+
+def load_text_document(file_path: str) -> dict[str, Any]:
+    """
+    Load a plain-text document and return its content with basic metadata.
+    """
+
+    path = Path(file_path)
+
+    if not path.exists():
+        raise FileNotFoundError(f"Document not found: {file_path}")
+
+    if not path.is_file():
+        raise ValueError(f"Path is not a file: {file_path}")
+
+    text = path.read_text(encoding="utf-8")
+
+    return {
+        "content": text,
+        "metadata": {
+            "source": str(path),
+            "filename": path.name,
+            "file_type": path.suffix.lower(),
+        },
+    }
+
+
+if __name__ == "__main__":
+    document = load_text_document("sample_data/sample_document.txt")
+
+    print("Filename:", document["metadata"]["filename"])
+    print("File type:", document["metadata"]["file_type"])
+    print("\nContent:\n")
+    print(document["content"])
+    
