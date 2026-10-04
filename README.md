@@ -181,6 +181,15 @@ def load_text_document(file_path: str) -> dict[str, Any]:
     Load a plain-text document and return its content with basic metadata.
     """
 
+  from pathlib import Path
+from typing import Any
+
+
+def load_text_document(file_path: str) -> dict[str, Any]:
+    """
+    Load a plain-text document and return its content with basic metadata.
+    """
+
     path = Path(file_path)
 
     if not path.exists():
@@ -208,4 +217,3 @@ if __name__ == "__main__":
     print("File type:", document["metadata"]["file_type"])
     print("\nContent:\n")
     print(document["content"])
-    
